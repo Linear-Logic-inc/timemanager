@@ -4,16 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kabusapi"
-description = "Easy handling of kabustation API"
+description = "handling time"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.9.0"
 dependencies = [
-    "pyyaml",
-    "pywin32",
     "numpy",
     "pandas",
-    "websocket-client",
 ]
 dynamic = ["version"]
 
@@ -25,10 +22,6 @@ dev = [
     "black",
     "isort"
 ]
-
-[project.scripts]
-kabustation = "kabusapi.utils.auto_login:kabustation_login"
-marketspeed2 = "kabusapi.utils.auto_login:marketspeed2_login"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
