@@ -67,8 +67,6 @@ def to_datetime(time_obj):
         return time_obj.to_pydatetime()
     elif isinstance(time_obj, str):
         return pd.to_datetime(time_obj).to_pydatetime()
-    elif isinstance(time_obj, datetime.datetime):
-        
     else:
         raise ValueError("Unsupported type")
         
