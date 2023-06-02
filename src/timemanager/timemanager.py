@@ -56,6 +56,25 @@ def from_timezone(time, timezone=None):
     else:
         return pd.to_datetime(time, utc=False).tz_localize(timezone).tz_convert(TIMEZONE)
 
+def to_datetime(time_obj):    
+    if isinstance(time_obj, datetime.datetime):
+        return time_obj
+    elif isinstance(time_obj, datetime.date):
+        return datetime.datetime(time_obj.year, time_obj.month, time_obj.day)
+    elif isinstance(time_obj, np.datetime64):
+        return time_obj.astype(datetime.datetime)
+    elif isinstance(time_obj, pd.Timestamp):
+        return time_obj.to_pydatetime()
+    elif isinstance(time_obj, str):
+        return pd.to_datetime(time_obj).to_pydatetime()
+    elif isinstance(time_obj, datetime.datetime):
+        
+    else:
+        raise ValueError("Unsupported type")
+        
+def to_date(time_obj):
+    return to_datetime(time_obj).date()
+    
 def previous_day(date):
     return date - datetime.timedelta(days=1)
     
