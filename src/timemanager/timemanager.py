@@ -62,7 +62,7 @@ def to_datetime(time_obj):
     elif isinstance(time_obj, datetime.date):
         return datetime.datetime(time_obj.year, time_obj.month, time_obj.day)
     elif isinstance(time_obj, np.datetime64):
-        return time_obj.astype(datetime.datetime)
+        return pd.Timestamp(time_obj).to_pydatetime()
     elif isinstance(time_obj, pd.Timestamp):
         return time_obj.to_pydatetime()
     elif isinstance(time_obj, str):
