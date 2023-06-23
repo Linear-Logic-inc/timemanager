@@ -172,6 +172,7 @@ class TradeTime:
         self.set_time_of_quotes()
         return (self.five_minutes_before_goba_last <= now() <= self.goba_last)
     
+    @staticmethod
     def is_business_day(time_obj):
         """
         銀行カレンダーにおいて営業日か判定する
