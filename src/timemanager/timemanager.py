@@ -3,6 +3,7 @@ from ctypes import windll
 import numpy as np
 import pandas as pd
 import datetime
+import jpholiday
 
 # タイムゾーンの設定
 TIMEZONE = 'Asia/Tokyo'
@@ -170,5 +171,44 @@ class TradeTime:
     def is_last_five_minutes(self):
         self.set_time_of_quotes()
         return (self.five_minutes_before_goba_last <= now() <= self.goba_last)
+    
+    def is_business_day(time_obj):
+        """
+        銀行カレンダーにおいて営業日か判定する
+        
+        Parameters
+        ----------
+        time_obj : datetime-like object
+            datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
+            str型の場合はpd.Timestampを通して変換する
+        
+        Returns
+        -------
+        res : boolean
+            営業日か。土日祝または12/31 ~ 01/03 ならばFalse、それ以外ならTrue
+        """
+        # datetime.date型に変換する
+        date = to_date(time_obj)
+        
+        # 祝日かどうかを判定
+        if jpholiday.is_holiday(date):
+            return False
+
+        # 土曜日かどうかを判定
+        if date.weekday() == 5:
+            return False
+
+        # 日曜日かどうかを判定
+        if date.weekday() == 6:
+            return False
+
+        # 12月31日から1月3日までの期間は休みと判定
+        if date.month == 12 and date.day >= 31:
+            return False
+        if date.month == 1 and date.day <= 3:
+            return False
+
+        # 上記条件に当てはまらなければ営業日と判定
+        return True
 
 trade_time = TradeTime()
