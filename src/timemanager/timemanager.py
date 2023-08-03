@@ -131,12 +131,12 @@ def int2time(n):
     return pd.to_datetime(utc_time, utc=True).tz_convert(TIMEZONE)
 
 class TradeTime:
-    def __init__(self):
+    def __init__(self, date=None):
         #-----------------取引時間に関する関数群-----------------
-        self.set_time_of_quotes()
+        self.set_time_of_quotes(date=date)
         
-    def set_time_of_quotes(self):
-        date = now().date()
+    def set_time_of_quotes(self, date):
+        date = date or now().date()
         if ('date' not in dir(self)) or (date != self.date):
             # この関数を初めて呼び出すか、
             # 前回呼び出した時から日付が変わっていた時
