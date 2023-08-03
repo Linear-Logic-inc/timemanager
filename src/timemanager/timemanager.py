@@ -214,5 +214,48 @@ class TradeTime:
 
         # 上記条件に当てはまらなければ営業日と判定
         return True
+    
+    @staticmethod
+    def next_business_day(time_obj):
+        """
+        銀行カレンダーにおける次の営業日を返す。入力が営業日ならそのまま返す。
+        
+        Parameters
+        ----------
+        time_obj : datetime-like object
+            datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
+            str型の場合はpd.Timestampを通して変換する
+        
+        Returns
+        -------
+        res : datetime.date object
+            次の営業日。
+        """
+        date = to_date(time_obj)
+        while not self.is_business_day(date):
+            date = next_day(date)
+        return date
+    
+    @staticmethod
+    def previous_business_day(time_obj):
+        """
+        銀行カレンダーにおける前の営業日を返す。入力が営業日ならそのまま返す。
+        
+        Parameters
+        ----------
+        time_obj : datetime-like object
+            datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
+            str型の場合はpd.Timestampを通して変換する
+        
+        Returns
+        -------
+        res : datetime.date object
+            前の営業日。
+        """
+        date = to_date(time_obj)
+        while not self.is_business_day(date):
+            date = previous_day(date)
+        return date
+    
 
 trade_time = TradeTime()
