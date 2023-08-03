@@ -136,7 +136,10 @@ class TradeTime:
         self.set_time_of_quotes(date=date)
         
     def set_time_of_quotes(self, date):
-        date = date or now().date()
+        if date is None:
+            date = to_date(date)
+        else:
+            date = now().date()
         if ('date' not in dir(self)) or (date != self.date):
             # この関数を初めて呼び出すか、
             # 前回呼び出した時から日付が変わっていた時
