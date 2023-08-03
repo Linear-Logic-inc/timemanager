@@ -250,7 +250,7 @@ class TradeTime:
             次の営業日。
         """
         date = to_date(time_obj)
-        while not self.is_business_day(date):
+        while not TradeTime.is_business_day(date):
             date = next_day(date)
         return date
     
@@ -271,7 +271,7 @@ class TradeTime:
             前の営業日。
         """
         date = to_date(time_obj)
-        while not self.is_business_day(date):
+        while not TradeTime.is_business_day(date):
             date = previous_day(date)
         return date
     
