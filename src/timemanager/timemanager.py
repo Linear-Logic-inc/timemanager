@@ -158,25 +158,40 @@ class TradeTime:
 
             self.date = date
 
-    def is_lunch_break(self, time=None):
+    def is_lunch_break(self, time=None, inclusive=False):
         time = time or now()
-        return (self.zenba_last < time < self.goba_first)
+        if inclusive:
+            return (self.zenba_last <= time <= self.goba_first)
+        else:
+            return (self.zenba_last < time < self.goba_first)
 
-    def is_before_start(self, time=None):
+    def is_before_start(self, time=None, inclusive=False):
         time = time or now()
-        return (time < self.zenba_first)
+        if inclusive:
+            return (time <= self.zenba_first)
+        else:
+            return (time < self.zenba_first)
 
-    def is_after_end(self, time=None):
+    def is_after_end(self, time=None, inclusive=False):
         time = time or now()
-        return (self.goba_last < time)
+        if inclusive:
+            return (self.goba_last <= time)
+        else:
+            return (self.goba_last < time)
 
-    def is_trading_hours(self, time=None):
+    def is_trading_hours(self, time=None, inclusive=True):
         time = time or now()
-        return (self.zenba_first <= time <= self.zenba_last) or (self.goba_first <= time <= self.goba_last)
+        if inclusive:
+            return (self.zenba_first <= time <= self.zenba_last) or (self.goba_first <= time <= self.goba_last)
+        else:
+            return (self.zenba_first < time < self.zenba_last) or (self.goba_first < time < self.goba_last)
 
-    def is_last_five_minutes(self, time=None):
+    def is_last_five_minutes(self, time=None, inclusive=True):
         time = time or now()
-        return (self.five_minutes_before_goba_last <= time <= self.goba_last)
+        if inclusive:
+            return (self.five_minutes_before_goba_last <= time <= self.goba_last)
+        else:
+            return (self.five_minutes_before_goba_last < time < self.goba_last)
     
     @staticmethod
     def is_business_day(time_obj):
