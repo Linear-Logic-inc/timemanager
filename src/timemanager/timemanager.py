@@ -157,26 +157,25 @@ class TradeTime:
 
             self.date = date
 
-    def is_lunch_break(self):
-        self.set_time_of_quotes()
-        return (self.zenba_last < now() < self.goba_first)
+    def is_lunch_break(self, time=None):
+        time = time or now()
+        return (self.zenba_last < time < self.goba_first)
 
-    def is_before_start(self):
-        self.set_time_of_quotes()
-        return (now() < self.zenba_first)
+    def is_before_start(self, time=None):
+        time = time or now()
+        return (time < self.zenba_first)
 
-    def is_after_end(self):
-        self.set_time_of_quotes()
-        return (self.goba_last < now())
+    def is_after_end(self, time=None):
+        time = time or now()
+        return (self.goba_last < time)
 
-    def is_trading_hours(self):
-        self.set_time_of_quotes()
-        _now = now()
-        return (self.zenba_first <= _now <= self.zenba_last) or (self.goba_first <= _now <= self.goba_last)
+    def is_trading_hours(self, time=None):
+        time = time or now()
+        return (self.zenba_first <= time <= self.zenba_last) or (self.goba_first <= time <= self.goba_last)
 
-    def is_last_five_minutes(self):
-        self.set_time_of_quotes()
-        return (self.five_minutes_before_goba_last <= now() <= self.goba_last)
+    def is_last_five_minutes(self, time=None):
+        time = time or now()
+        return (self.five_minutes_before_goba_last <= time <= self.goba_last)
     
     @staticmethod
     def is_business_day(time_obj):
