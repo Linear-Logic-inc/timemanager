@@ -63,14 +63,14 @@ def to_datetime(time_obj):
     elif isinstance(time_obj, datetime.date):
         return datetime.datetime(time_obj.year, time_obj.month, time_obj.day)
     elif isinstance(time_obj, np.datetime64):
-        return pd.Timestamp(time_obj).to_pydatetime()
+        return pd.Timestamp(time_obj).to_pydatetime(warn=False)
     elif isinstance(time_obj, pd.Timestamp):
-        return time_obj.to_pydatetime()
+        return time_obj.to_pydatetime(warn=False)
     elif isinstance(time_obj, str): 
         if time_obj == 'now':
-            return now().to_pydatetime()
+            return now().to_pydatetime(warn=False)
         else:
-            return pd.to_datetime(time_obj).to_pydatetime()
+            return pd.to_datetime(time_obj).to_pydatetime(warn=False)
     else:
         raise ValueError("Unsupported type")
         
