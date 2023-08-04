@@ -234,15 +234,19 @@ class TradeTime:
         return True
     
     @staticmethod
-    def next_business_day(time_obj):
+    def next_business_day(time_obj, include_now=True):
         """
-        銀行カレンダーにおける次の営業日を返す。入力が営業日ならそのまま返す。
+        銀行カレンダーにおける次の営業日を返す。
         
         Parameters
         ----------
         time_obj : datetime-like object
             datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
             str型の場合はpd.Timestampを通して変換する
+            
+        include_now : bool, default: True
+            if True, 入力が営業日ならそのまま返す。
+            if False, 前日以降で最も近い営業日を返す
         
         Returns
         -------
@@ -250,20 +254,27 @@ class TradeTime:
             次の営業日。
         """
         date = to_date(time_obj)
+        if not include_now:
+            date = next_day(date)
+            
         while not TradeTime.is_business_day(date):
             date = next_day(date)
         return date
     
     @staticmethod
-    def previous_business_day(time_obj):
+    def previous_business_day(time_obj, include_now=True):
         """
-        銀行カレンダーにおける前の営業日を返す。入力が営業日ならそのまま返す。
+        銀行カレンダーにおける前の営業日を返す。
         
         Parameters
         ----------
         time_obj : datetime-like object
             datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
             str型の場合はpd.Timestampを通して変換する
+            
+        include_now : bool, default: True
+            if True, 入力が営業日ならそのまま返す。
+            if False, 前日以前で最も近い営業日を返す
         
         Returns
         -------
@@ -271,6 +282,9 @@ class TradeTime:
             前の営業日。
         """
         date = to_date(time_obj)
+        if not include_now:
+            date = previous_day(date)
+            
         while not TradeTime.is_business_day(date):
             date = previous_day(date)
         return date
