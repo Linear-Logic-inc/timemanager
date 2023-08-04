@@ -194,6 +194,21 @@ class TradeTime:
             return (self.five_minutes_before_goba_last < time < self.goba_last)
     
     @staticmethod
+    def settlement_date(trade_date):
+        """約定日から受渡日を計算する"""
+        trade_date = to_date(trade_date) 
+        if trade_date < datetime.date(2019, 7, 16):
+            delta = 3 # 2019年7月16日より前は4営業日目が受渡日
+        else:
+            delta = 2 # 2019年7月16日以降は3営業日目が受渡日
+            
+        res = trade_date
+        for i in range(delta):
+            res = TradeTime.next_business_day(res, include_now=False)
+            
+        return res
+    
+    @staticmethod
     def is_business_day(time_obj):
         """
         銀行カレンダーにおいて営業日か判定する
