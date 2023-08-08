@@ -204,7 +204,7 @@ class TradeTime:
             
         res = trade_date
         for i in range(delta):
-            res = TradeTime.next_business_day(res, include_now=False)
+            res = TradeTime.next_business_day(res)
             
         return res
     
@@ -249,7 +249,7 @@ class TradeTime:
         return True
     
     @staticmethod
-    def next_business_day(time_obj, include_now=True):
+    def next_business_day(time_obj, include_now=False):
         """
         銀行カレンダーにおける次の営業日を返す。
         
@@ -277,7 +277,7 @@ class TradeTime:
         return date
     
     @staticmethod
-    def previous_business_day(time_obj, include_now=True):
+    def previous_business_day(time_obj, include_now=False):
         """
         銀行カレンダーにおける前の営業日を返す。
         
