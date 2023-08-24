@@ -259,7 +259,7 @@ class TradeTime:
             datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
             str型の場合はpd.Timestampを通して変換する
             
-        include_now : bool, default: True
+        include_now : bool, default: False
             if True, 入力が営業日ならそのまま返す。
             if False, 前日以降で最も近い営業日を返す
         
@@ -287,7 +287,7 @@ class TradeTime:
             datetime.datetime, datetime.date, numpy.datetime64, pd.Timestamp, str型など
             str型の場合はpd.Timestampを通して変換する
             
-        include_now : bool, default: True
+        include_now : bool, default: False
             if True, 入力が営業日ならそのまま返す。
             if False, 前日以前で最も近い営業日を返す
         
