@@ -131,7 +131,6 @@ class TradeTime:
                 "year": date.year, 
                 "month": date.month, 
                 "day": date.day, 
-                "tz": TIMEZONE,
             }
             self.zenba_first = pd.Timestamp(**date_args, hour=9, minute=0)
             self.zenba_last = pd.Timestamp(**date_args, hour=11, minute=30)
