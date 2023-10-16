@@ -8,8 +8,7 @@ import jpholiday
 
 from .common import *
 
-# タイムゾーンの設定
-TIMEZONE = 'Asia/Tokyo'
+TIMEZONE = pd.Timedelta(9, 'h')
 
 # windowsのクロック解像度はデフォルトでは1/64秒=15.625ミリ秒
 # これをより短く設定する
@@ -35,30 +34,11 @@ _DO_NOT_REFER_THIS = _HiddenDestructor()
 
 def now():
     """現在時刻をpandas.Timestamp型で返す"""
-    return pd.to_datetime('now', utc=True).tz_convert(TIMEZONE)
+    return pd.Timestamp('now')
 
 def from_utc(time):
     """UTC時刻をpandas.Timestamp型に変換する"""
-    return pd.to_datetime(time, utc=True).tz_convert(TIMEZONE)
-
-def from_timezone(time, timezone=None):
-    """
-    任意のタイムゾーンの時刻をpandas.Timestamp型に変換する
-    
-    Parameters
-    ----------
-    time : str or datetime-like object
-        時刻。
-    timezone : str, optional
-        タイムゾーン。デフォルトではAsia/Tokyo(UTC+9)として処理される。
-    """
-    if hasattr(time, 'tzinfo') and time.tzinfo is not None:
-        # すでにタイムゾーンの情報があるオブジェクトのとき
-        return pd.to_datetime(time).tz_convert(TIMEZONE)
-    if timezone is None:
-        return pd.to_datetime(time, utc=False).tz_localize(TIMEZONE)
-    else:
-        return pd.to_datetime(time, utc=False).tz_localize(timezone).tz_convert(TIMEZONE)
+    return pd.Timestamp(time) + TIMEZONE
 
 def to_datetime(time_obj):  
     if isinstance(time_obj, datetime.datetime):
@@ -99,11 +79,11 @@ def wait_until(utc_end_time):
 
     Parameters
     ----------
-    utc_end_time: pandas.Timestamp or numpy.datetime64
-        プログラムを再開させる時刻
+    end_time: pandas.Timestamp or numpy.datetime64
+        プログラムを再開させる(当該タイムゾーンでの)時刻
         utcのnumpy.datetime64, utcのpandas.Timestamp, timezone付きのpandas.Timestampのいずれか
     """
-    end_time = pd.to_datetime(utc_end_time, utc=True).tz_convert(TIMEZONE)
+    end_time = pd.Timestamp(end_time)
     wait((end_time - now()).total_seconds())
 
 def wait_if_pace_too_fast(dtime_second = 1):
@@ -130,8 +110,8 @@ def time2int(t):
     return int.from_bytes(t.tobytes(), byteorder='big')
 
 def int2time(n):
-    utc_time = np.frombuffer(n.to_bytes(8, byteorder='big'), dtype='datetime64[ns]')[0]
-    return from_utc(utc_time) # time2intでutcに変換されるためもとに戻す
+    t = np.frombuffer(n.to_bytes(8, byteorder='big'), dtype='datetime64[ns]')[0]
+    return pd.Timestamp(t)
 
 class TradeTime:
     def __init__(self, date=None):
