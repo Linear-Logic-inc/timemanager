@@ -73,7 +73,7 @@ def wait(seconds):
     if seconds > 0:
         time_module.sleep(seconds)
 
-def wait_until(utc_end_time):
+def wait_until(end_time):
     """
     プログラムを指定時刻まで停止させる。
 
