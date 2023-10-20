@@ -192,9 +192,104 @@ remove_range = TimeRange('2023-01-02', '2023-01-03')
 updated_ranges = disjoint_ranges - remove_range
 print(updated_ranges)  # DisjointTimeRanges([TimeRange('2023-01-01', '2023-01-02'), TimeRange('2023-01-05', '2023-01-07')])
 ```
-</details>
 
 上記は、`TimeRange`と`DisjointTimeRanges`クラスの基本的な使い方を示す例です。これらのクラスは、特定の時間範囲や、その集合を簡単に管理するために使用できます。
+</details>
+
+<details><summary><b>`TimeSeries` Class</b></summary>
+
+First, make sure you import the `TimeSeries` class from the `timemanager` module.
+
+```python
+from timemanager import TimeSeries
+```
+
+### Initializing
+
+You can initialize a `TimeSeries` object like a dictionary, passing a series of time-value pairs.
+
+```python
+ts = TimeSeries({'2023-01-01': 100, '2023-01-02': 110, '2023-01-03': 105})
+```
+
+### Adding and Accessing Data
+
+Just like a dictionary, you can add and access time-value pairs directly.
+
+```python
+ts['2023-01-04'] = 120
+print(ts['2023-01-04'])  # Output: 120
+```
+
+### Slicing
+
+You can also slice the `TimeSeries` object to get a new `TimeSeries` containing a subrange of times.
+
+```python
+sub_ts = ts['2023-01-01':'2023-01-03']
+```
+
+### Using the Query Methods
+
+The `TimeSeries` class provides specialized methods to query data based on time.
+
+- **`last_include_now(key)`**: Returns the value at the specified time or the closest past time.
+
+```python
+result = ts.last_include_now('2023-01-02')  # Returns the value for '2023-01-02'
+```
+
+- **`last_exclude_now(key)`**: Returns the value at the closest past time excluding the specified time.
+
+```python
+result = ts.last_exclude_now('2023-01-02')  # Returns the value for '2023-01-01'
+```
+
+- **`next_include_now(key)`**: Returns the value at the specified time or the closest future time.
+
+```python
+result = ts.next_include_now('2023-01-02')  # Returns the value for '2023-01-02'
+```
+
+- **`next_exclude_now(key)`**: Returns the value at the closest future time excluding the specified time.
+
+```python
+result = ts.next_exclude_now('2023-01-02')  # Returns the value for '2023-01-03'
+```
+
+Each of these methods might raise an `IndexError` if no suitable value is found.
+
+### Handling Errors
+
+An `IndexError` will be raised if a suitable value is not found when using the query methods, such as when you are trying to access a time outside of the available range in the `TimeSeries`.
+
+### Example
+
+Here is a more complete example combining different operations:
+
+```python
+from timemanager import TimeSeries
+
+# Initializing
+ts = TimeSeries({'2023-01-01': 100, '2023-01-02': 110, '2023-01-03': 105})
+
+# Adding and accessing data
+ts['2023-01-04'] = 120
+print(ts['2023-01-04'])  # Output: 120
+
+# Slicing
+sub_ts = ts['2023-01-01':'2023-01-03']
+
+# Querying
+result1 = ts.last_include_now('2023-01-02')  # Output: ('2023-01-02', 110)
+result2 = ts.next_exclude_now('2023-01-02')  # Output: ('2023-01-03', 105)
+
+print(result1)
+print(result2)
+```
+
+Note that in the querying methods, the result is a tuple with the time and value.
+</details>
 
 ## Contributing
 
