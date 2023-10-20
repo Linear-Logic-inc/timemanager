@@ -134,6 +134,41 @@ class DisjointTimeRanges:
 
 class TimeSeries(SortedDict):
     """時系列データを保存する辞書。指定時刻に近い時刻のデータをO(log(n))で探す。"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Convert string keys to np.datetime64
+        
+        # まだ内部ではkeyがstrの場合があるので、__getitem＿内でkeyをstrに変換しない設定にする
+        self._is_internal_key_may_str = True 
+        items = list(self.items())
+        self.clear()
+        for key, value in items:
+            self[key] = value
+        self._is_internal_key_may_str = False
+    
+    def _key2dt(self, key):
+        if isinstance(key, str):
+            return np.datetime64(key)
+        else:
+            return key
+        
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            # key.step は無視する
+            start = self._key2dt(key.start)
+            stop = self._key2dt(key.stop)
+            return TimeSeries({k: self[k] for k in self.irange(start, stop, inclusive=(True, False))})
+        else:
+            if not self._is_internal_key_may_str:
+                # __init__終了後、keyがstrの可能性がなくなったら
+                # keyがstrのときは自動的にnp.datetime64に変換する
+                key = self._key2dt(key)
+            return super().__getitem__(key)
+        
+    def __setitem__(self, key, value):
+        super().__setitem__(self._key2dt(key), value)
+    
     def _index_of_last_inclusive(self, key): 
         return self.bisect_right(key) - 1
     
@@ -167,10 +202,3 @@ class TimeSeries(SortedDict):
             raise IndexError("list index out of range")
         else:
             return self.peekitem(i)
-        
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            # key.step は無視する
-            return TimeSeries({k: self[k] for k in self.irange(key.start, key.stop, inclusive=(True, False))})
-        else:
-            return super().__getitem__(key)
