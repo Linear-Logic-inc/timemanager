@@ -26,6 +26,7 @@ pip install git+https://github.com/FumiYoshida/timemanager
 
 ## Usage
 
+### Import
 基本的な使用方法は以下のとおりです。
 
 ```python
@@ -45,6 +46,27 @@ from timemanager import notz as timemanager
 current_time = timemanager.now()
 print(f'Current time: {current_time}')
 ```
+
+### Wait inside loop
+```python
+import requests
+import timemanager
+
+def scrape_website(url="http://example.com"):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raises stored HTTPError, if one occurred.
+        print(f"Content from {url}:\n{response.text}\n")
+    except requests.exceptions.HTTPError as err:
+        print(f"Error: {err}")
+
+while True:
+    timemanager.wait_if_pace_too_fast(1)
+    scrape_website()
+```
+
+このコードは、指定したURL（この場合は [example.com]("http://example.com")）からコンテンツをスクレイピングし、その内容を出力します。`timemanager.wait_if_pace_too_fast(1)`は、スクレイピング関数が1秒に1回以上実行されないように制御します。
+
 
 詳細なドキュメンテーションは、[こちら](https://github.com/FumiYoshida/timemanager/wiki)をご覧ください。
 
