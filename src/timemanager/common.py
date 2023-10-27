@@ -334,6 +334,11 @@ class TimeRange:
             return (self - other) | (other - self)
         return NotImplemented
     
+    def __eq__(self, other):
+        if isinstance(other, TimeRange):
+            return (self.start == other.start) and (self.end == other.start)
+        return NotImplemented
+    
 class DisjointTimeRanges:
     def __init__(self, ranges=None):
         """
@@ -555,6 +560,27 @@ class DisjointTimeRanges:
         
     def __rxor__(self, other):
         return self ^ other
+    
+    def __eq__(self, other):
+        if isinstance(other, TimeRange):
+            return len(self.ranges) == 1 and self.ranges[0] == other
+        elif isinstance(other, DisjointTimeRanges):
+            # rangeをカノニカルな形式に変換する
+            self._consolidate_ranges()
+            other._consolidate_ranges()
+            
+            # rangeの数が一致するかチェック
+            if len(self.ranges) != len(other.ranges):
+                return False
+            
+            # rangeがすべて一致するかチェック
+            for r1, r2 in zip(self.ranges, other.ranges):
+                if r1 != r2:
+                    return False
+                
+            return True
+        else:
+            return NotImplemented
 
 class TimeSeries(SortedDict):
     """時系列データを保存する辞書。指定時刻に近い時刻のデータをO(log(n))で探す。"""
