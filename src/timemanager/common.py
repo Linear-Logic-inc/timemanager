@@ -1,136 +1,560 @@
 import numpy as np
 from sortedcontainers import SortedDict
+from functools import total_ordering
 
-class TimeRange:
-    def __init__(self, start, end):
+@total_ordering
+class TimewithInf:
+    """
+    A class to represent time with support for positive and negative infinity.
+    
+    Attributes
+    ----------
+    is_inf : bool
+        True if the value is positive infinity, False otherwise.
+    is_ninf : bool
+        True if the value is negative infinity, False otherwise.
+    value : np.datetime64 or float
+        The actual value of the object. Could be a datetime or infinity.
+        
+    Methods
+    -------
+    time_or_none()
+        Returns the time value or None if the value is infinity.
+    __str__()
+        Return a formatted string representation of the object.
+    __repr__()
+        Return the official string representation of the object.
+    __eq__(other)
+        Check the equality of this object with another TimewithInf object.
+    __lt__(other)
+        Compare this object with another TimewithInf object for ordering.
+    """
+    def __init__(self, value):
         """
-        連続した時間範囲[start, end)を扱う
-        numpy.datetime64がベースで、timezoneには非対応
+        Initialize the TimewithInf object.
+        
+        Parameters
+        ----------
+        value : float or date-like string
+            The value to be stored in the object. 
+            Could be a datetime, np.inf, or -np.inf.
         """
-        self.start = np.datetime64(start)
-        self.end = np.datetime64(end)
-        if self.start >= self.end:
-            raise ValueError("End time must be after start time")
-
+        self.is_inf = False
+        self.is_ninf = False
+        
+        if isinstance(value, float):
+            assert value in [np.inf, -np.inf]
+            if value == np.inf:
+                self.is_inf = True
+            elif value == (-np.inf):
+                self.is_ninf = True
+                
+            self.value = value
+        else:
+            self.value = np.datetime64(value)
+            
+    def time_or_none(self):
+        """
+        Get the time value or None.
+        
+        Returns
+        -------
+        np.datetime64 or None
+            Returns the time value or None if the value is infinity.
+        """
+        if self.is_inf or self.is_ninf:
+            return None
+        else:
+            return self.value
+        
     def __str__(self):
-        return f"TimeRange('{self.start}', '{self.end}')"
+        return f"TimewithInf({self.value})"
+    
+    def __repr__(self):
+        return str(self)
+        
+    def __eq__(self, other):
+        if not isinstance(other, TimewithInf):
+            other = TimewithInf(other)
+            
+        if type(self.value) == type(other.value):
+            return self.value == other.value
+        else:
+            return False
+        
+    def __lt__(self, other):
+        """return self < other"""
+        if not isinstance(other, TimewithInf):
+            other = TimewithInf(other)
+            
+        if self.is_inf:
+            return False # (inf < other) ... False 
+        elif self.is_ninf:
+            if other.is_ninf:
+                return False # (-inf < -inf) ... False
+            else:
+                return True # (-inf < other) ... True
+        else:
+            if other.is_ninf:
+                return False # (self < -inf) ... False
+            elif other.is_inf:
+                return True # (self < inf) ... True
+            else:
+                return self.value < other.value
+            
+class TimeRange:
+    """
+    Represents a continuous time range [start, end).
+
+    Attributes
+    ----------
+    start : np.datetime64 or None
+        Starting point of the time range.
+    end : np.datetime64 or None
+        Ending point of the time range.
+    is_duration_zero : bool
+        True if the time range has zero duration.
+    is_duration_inf : bool
+        True if the time range has infinite duration.
+    ranges : list
+        A list containing this time range.
+
+    Methods
+    -------
+    zero_range()
+        Create a zero-duration time range.
+    copy()
+        Create a copy of this time range.
+    duration()
+        Get the duration of this time range.
+    contains(t)
+        Check whether a time value is contained within this time range.
+    overlaps(other)
+        Check whether this time range overlaps with another time range.
+    continuous(other)
+        Check whether this time range is continuous with another time range.
+    intersection(other)
+        Get the intersection of this time range with another.
+    union(other)
+        Get the union of this time range with another.
+    to_array(unit='D')
+        Get an array representation of this time range.
+    shift(dtime)
+        Shift this time range by a certain duration.
+    __sub__(other)
+        Subtract another time range from this time range.
+    __or__(other)
+        Get the union of this time range with another using the | operator.
+    __and__(other)
+        Get the intersection of this time range with another using the & operator.
+    __xor__(other)
+        Get the symmetric difference of this time range with another using the ^ operator.
+    """
+    def __init__(self, start=None, end=None):
+
+        """
+        Initialize a TimeRange object.
+        
+        Parameters
+        ----------
+        start : compatible with np.datetime64, optional
+            Starting time of the range. If None, the range extends infinitely
+            into the past.
+        end : compatible with np.datetime64, optional
+            Ending time of the range. If None, the range extends infinitely
+            into the future.
+        """
+        if isinstance(start, TimewithInf):
+            self.start = start.time_or_none()
+            self._start_obj = start
+        else:
+            self.start = start and np.datetime64(start)
+            self._start_obj = TimewithInf(start or (-np.inf))
+            
+        if isinstance(end, TimewithInf):
+            self.end = end.time_or_none()
+            self._end_obj = end
+        else:
+            self.end = end and np.datetime64(end)
+            self._end_obj = TimewithInf(end or np.inf)
+        
+        self.is_duration_zero = self.start and self.end and (self.start >= self.end)
+        self.is_duration_inf = (self.start is None) or (self.end is None)
+        
+        self.ranges = [self]
+        
+    @staticmethod
+    def zero_range():
+        """
+        Returns
+        -------
+        TimeRange
+            A time range object representing a zero-duration range.
+        """
+        return TimeRange('2020-01-01', '2020-01-01')
+    
+    def __str__(self):
+        if self.is_duration_zero:
+            return "TimeRange()"
+        else:
+            return f"TimeRange('{self.start}', '{self.end}')"
 
     def __repr__(self):
         return self.__str__()
+    
+    def copy(self):
+        """Create a copy of this time range."""
+        return TimeRange(self.start, self.end)
 
     def duration(self):
-        return self.end - self.start
+        """Get the duration of this time range."""
+        if self.is_duration_zero:
+            return 0
+        elif self.is_duration_inf:
+            return np.inf
+        else:
+            return self.end - self.start
+        
+    def contains(self, t):
+        """Check whether a time value is contained within this time range."""
+        return self._start_obj <= t < self._end_obj
 
-    def contains(self, timestamp):
-        return self.start <= np.datetime64(timestamp) < self.end
-
-    def overlaps(self, other_range):
-        """
-        2つのTimeRangeが重なっているか/もしくは連続しているかを調べる
-        片方のendともう片方のstartが同じ場合はTrueを返す
-        """
-        return self.start <= other_range.end and self.end >= other_range.start
-
-    def intersection(self, other_range):
-        """2つのTimeRangeの共通範囲を返す"""
-        if not self.overlaps(other_range):
-            return None
-        return TimeRange(max(self.start, other_range.start), min(self.end, other_range.end))
-
-    def union(self, other_range):
-        """どちらかのTimeRangeに含まれる範囲を返す"""
-        return TimeRange(min(self.start, other_range.start), max(self.end, other_range.end))
-
-    def copy(self):
-        return TimeRange(self.start, self.end)
+    def overlaps(self, other):
+        """Check whether this time range overlaps with another time range."""
+        if self.is_duration_zero or other.is_duration_zero:
+            return False
+        else:
+            # 補足: 2項目がself.contains(other.end)だと、self.start == other.endのとき、
+            # 半開区間同士ゆえに重なっていないのにTrueになってしまう
+            return self.contains(other.start) or other.contains(self.start)
     
-    def arange(self, unit='D'):
+    def continuous(self, other):
+        """Check whether this time range is continuous with another time range."""
+        return (self._start_obj == other._end_obj) or (self._end_obj == other._start_obj)
+
+    def intersection(self, other):
+        """Get the intersection of this time range with another."""
+        new_start_obj = max(self._start_obj, other._start_obj)
+        new_end_obj = min(self._end_obj, other._end_obj)
+        return TimeRange(new_start_obj, new_end_obj)
+    
+    def union(self, other):
+        """Get the union of this time range with another."""
+        if self.overlaps(other) or self.continuous(other):
+            # 合計が一つの連続した区間になるとき
+            new_start_obj = min(self._start_obj, other._start_obj)
+            new_end_obj = max(self._end_obj, other._end_obj)
+            return TimeRange(new_start_obj, new_end_obj)
+        else:
+            # 2つの区間が離れているとき
+            return DisjointTimeRanges([self, other])
+    
+    def to_array(self, unit='D'):
         """
-        時間範囲に含まれる時刻をnumpy.array形式で返す
-        unitはnumpy.datetime64準拠
+        Returns the time values within the time range as a numpy array.
+
+        The time range is divided into intervals of a specified unit, 
+        and each point in time within this range is included in the output array.
+
+        Parameters
+        ----------
+        unit : str, default 'D'
+            Specifies the unit of time to divide the range into. 
+            It must comply with numpy.datetime64 units such as 'Y', 'M', 'W', 'D', 
+            'h', 'm', 's', 'us', 'ns', 'ps', 'fs', 'as'.
+
+        Returns
+        -------
+        np.ndarray
+            An array containing np.datetime64 values within the time range.
+
+        Raises
+        ------
+        ValueError
+            If the operation is not supported due to infinite time ranges.
+        AssertionError
+            If the specified unit is not compatible with numpy.datetime64.
         """
+        if not (self.start and self.end):
+            raise ValueError("Operation not supported for infinite time ranges.")
+        
         np_time_units = {'Y','M','W','D','h','m','s','us','ns','ps','fs','as'}
         assert unit in np_time_units
 
         time_start = self.start.astype(f'datetime64[{unit}]')
-        time_stop = self.end.astype(f'datetime64[{unit}]') + np.timedelta64(1, unit)
+        time_stop = self.end.astype(f'datetime64[{unit}]')
 
         return np.arange(time_start, time_stop, np.timedelta64(1, unit))
+    
+    def shift(self, dtime):
+        """
+        Shifts the time range by a certain duration and returns a new TimeRange object.
+
+        Parameters
+        ----------
+        dtime : np.timedelta64
+            The amount of time to shift the range by. It could be positive 
+            (shifting into the future) or negative (shifting into the past).
+
+        Returns
+        -------
+        TimeRange
+            A new TimeRange object representing the shifted time range.
+        """
+        return TimeRange(self.start + dtime, self.end + dtime)
+    
+    def __bool__(self):
+        return not self.is_duration_zero
     
     def __sub__(self, other):
         if isinstance(other, TimeRange):
             if intersection := self.intersection(other):
                 ranges = []
-                if self.start < intersection.start:
+                if self._start_obj < intersection._start_obj:
                     ranges.append(TimeRange(self.start, intersection.start))
-                if self.end > intersection.end:
+                if self._end_obj > intersection._end_obj:
                     ranges.append(TimeRange(intersection.end, self.end))
-                return ranges
+                return DisjointTimeRanges(ranges)
             else:
-                return [self]
+                return self
         return NotImplemented
 
-    def __add__(self, other):
+    def __or__(self, other):
         if isinstance(other, TimeRange):
-            if self.overlaps(other):
-                return self.union(other)
-            else:
-                raise ValueError("Ranges do not overlap")
+            return self.union(other)
         return NotImplemented
-
-    def __rsub__(self, other):
+    
+    def __and__(self, other):
         if isinstance(other, TimeRange):
-            return other.intersection(self)
+            return self.intersection(other)
         return NotImplemented
-
+    
+    def __xor__(self, other):
+        if isinstance(other, TimeRange):
+            return (self - other) | (other - self)
+        return NotImplemented
+    
 class DisjointTimeRanges:
     def __init__(self, ranges=None):
         """
-        時間範囲(=連続した時間範囲の集合)を扱う
-        numpy.datetime64がベースで、timezoneには非対応
+        Initializes the DisjointTimeRanges object to manage a set of disjoint time ranges.
+        
+        Parameters
+        ----------
+        ranges : list of TimeRange objects, optional
+            A list of TimeRange objects to initialize the DisjointTimeRanges object with.
+            Defaults to None, representing all possible intervals.
+        
+        Attributes
+        ----------
+        ranges : list of TimeRange objects
+            Stores the list of disjoint time ranges managed by this object.
         """
-        self.ranges = ranges if ranges else []
-
-    def add_range(self, start, end):
-        """"時間範囲に[start, end)を追加する"""
-        new_range = TimeRange(start, end)
-
-        for existing_range in self.ranges:
-            if existing_range.overlaps(new_range):
-                new_range = TimeRange(min(existing_range.start, new_range.start), max(existing_range.end, new_range.end))
-                self.ranges.remove(existing_range)
-
-        self.ranges.append(new_range)
-
-    def get_ranges(self):
-        return self.ranges
+        if ranges is None:
+            # rangesの指定がないとき
+            # 全区間を表すオブジェクトとする
+            self.ranges = [TimeRange()]
+        else:
+            self.ranges = ranges
+        self._consolidate_ranges()
+    
+    def copy(self):
+        """
+        Creates a deep copy of the DisjointTimeRanges object.
+        
+        Returns
+        -------
+        DisjointTimeRanges
+            A new DisjointTimeRanges object that is a copy of the current object.
+        """
+        return DisjointTimeRanges(ranges=self.ranges)
+    
+    @staticmethod
+    def zero_range():
+        """
+        Creates a DisjointTimeRanges object representing an empty time range.
+        
+        Returns
+        -------
+        DisjointTimeRanges
+            A DisjointTimeRanges object representing an empty time range.
+        """
+        return DisjointTimeRanges(ranges=[])
+    
+    def _consolidate_ranges(self):
+        if len(self.ranges) == 0:
+            return
+        
+        # (start, end)の辞書順でソート
+        self.ranges.sort(key=lambda r: (r._start_obj, r._end_obj))
+        
+        # 重なる範囲をグループ化
+        parent_idxs = []
+        for i in range(1, len(self.ranges)):
+            r0 = self.ranges[i - 1]
+            r1 = self.ranges[i]
+            if r0.overlaps(r1) or r0.continuous(r1):
+                self.ranges[i] |= self.ranges[i - 1]
+            else:
+                parent_idxs.append(i - 1)
+        parent_idxs.append(len(self.ranges) - 1)
+                
+        # 範囲リストを更新
+        self.ranges = [self.ranges[i] for i in parent_idxs if self.ranges[i]]
+        self.ranges.sort(key=lambda r: (r._start_obj, r._end_obj))  # 再度ソート
     
     def __repr__(self):
         return f"DisjointTimeRanges({repr(self.ranges)})"
-
-    def __add__(self, other):
+    
+    def duration(self):
+        """Get the sum of durations of the time ranges."""
+        return sum([r.duration() for r in self.ranges])
+    
+    def contains(self, t):
+        """Checks if a specific time is contained within the time ranges."""
+        return any(r.contains(t) for r in self.ranges) # any(generator)は短絡評価される
+    
+    def overlaps(self, other):
+        """Checks if two time ranges overlap."""
         if isinstance(other, TimeRange):
-            new_ranges = DisjointTimeRanges(self.ranges.copy())
-            new_ranges.add_range(other.start, other.end)
+            return any(r.overlaps(other) for r in self.ranges)
+        elif isinstance(other, DisjointTimeRanges):
+            # TODO: ここを効率的に実装する
+            return any(self.overlaps(r) for r in other.ranges)
+        else:
+            raise TypeError(
+                f"Expected object of type TimeRange or DisjointTimeRange, but got {type(other).__name__}."
+            )
+            
+    def intersection(self, other):
+        """Get the intersection of this time range with another."""
+        if isinstance(other, TimeRange):
+            return sum([r.intersection(other) for r in self.ranges], TimeRange.zero_range())
+        elif isinstance(other, DisjointTimeRanges):
+            # TODO: ここを効率的に実装する
+            return sum([self.intersection(r) for r in other.ranges], TimeRange.zero_range())
+        else:
+            raise TypeError(
+                f"Expected object of type TimeRange or DisjointTimeRange, but got {type(other).__name__}."
+            )
+        
+    def union(self, other):
+        """Get the union of this time range with another."""
+        if isinstance(other, TimeRange):
+            self._consolidate_ranges()
+            new_ranges = DisjointTimeRanges(self.ranges + [other])
+            new_ranges._consolidate_ranges()
             return new_ranges
-        return NotImplemented
+        elif isinstance(other, DisjointTimeRanges):
+            self._consolidate_ranges()
+            new_ranges = DisjointTimeRanges(self.ranges + other.ranges)
+            new_ranges._consolidate_ranges()
+            return new_ranges
+        else:
+            raise TypeError(
+                f"Expected object of type TimeRange or DisjointTimeRange, but got {type(other).__name__}."
+            )
+        
+    def to_array(self, unit='D'):
+        """
+        Returns the time values within the time ranges as a numpy array.
 
+        The time range is divided into intervals of a specified unit, 
+        and each point in time within this range is included in the output array.
+
+        Parameters
+        ----------
+        unit : str, default 'D'
+            Specifies the unit of time to divide the range into. 
+            It must comply with numpy.datetime64 units such as 'Y', 'M', 'W', 'D', 
+            'h', 'm', 's', 'us', 'ns', 'ps', 'fs', 'as'.
+
+        Returns
+        -------
+        np.ndarray
+            An array containing np.datetime64 values within the time range.
+
+        Raises
+        ------
+        ValueError
+            If the operation is not supported due to infinite time ranges.
+        AssertionError
+            If the specified unit is not compatible with numpy.datetime64.
+        """
+        self._consolidate_ranges()
+        return np.concatenate([r.to_array(unit) for r in self.ranges])
+    
+    def shift(self, dtime):
+        """
+        Shifts the time ranges by a certain duration and returns a new DisjointTimeRanges object.
+
+        Parameters
+        ----------
+        dtime : np.timedelta64
+            The amount of time to shift the range by. It could be positive 
+            (shifting into the future) or negative (shifting into the past).
+
+        Returns
+        -------
+        DisjointTimeRanges
+            A new DisjointTimeRanges object representing the shifted time ranges.
+        """
+        new_ranges = [r.shift(dtime) for r in self.ranges]
+        return DisjointTimeRanges(new_ranges)
+        
+    def __bool__(self):
+        return len(self.ranges) == 0
+    
     def __sub__(self, other):
         if isinstance(other, TimeRange):
-            new_ranges = DisjointTimeRanges(
-                sum([existing_range - other for existing_range in self.ranges], [])
-            )
-            return new_ranges
-        return NotImplemented
-
+            new_ranges = []
+            for r in self.ranges:
+                substracted = r - other
+                if isinstance(substracted, TimeRange):
+                    new_ranges.append(substracted)
+                elif isinstance(substracted, DisjointTimeRanges):
+                    new_ranges += substracted.ranges
+            return DisjointTimeRanges(new_ranges)
+        elif isinstance(other, DisjointTimeRanges):
+            # TODO: ここ効率的に実装する
+            new_ranges = sum([(r - other).ranges for r in self.ranges], [])
+            return DisjointTimeRanges(new_ranges)
+        else:
+            return NotImplemented
+        
     def __rsub__(self, other):
         if isinstance(other, TimeRange):
-            new_ranges = DisjointTimeRanges([other.copy()])
-            for existing_range in self.ranges:
-                new_ranges -= existing_range
+            # TODO: ここ効率的に実装する
+            new_ranges = other.copy()
+            for r in self.ranges:
+                new_ranges -= r
             return new_ranges
+        else:
+            return NotImplemented
+        
+    def __or__(self, other):
+        if isinstance(other, (TimeRange, DisjointTimeRanges)):
+            return self.union(other)
         return NotImplemented
     
+    def __ror__(self, other):
+        return self | other
+        
+    def __and__(self, other):
+        if isinstance(other, (TimeRange, DisjointTimeRanges)):
+            return self.intersection(other)
+        return NotImplemented
+    
+    def __rand__(self, other):
+        return self & other
+    
+    def __xor__(self, other):
+        if isinstance(other, (TimeRange, DisjointTimeRanges)):
+            return (self - other) | (other - self)
+        return NotImplemented
+        
+    def __rxor__(self, other):
+        return self ^ other
 
 class TimeSeries(SortedDict):
     """時系列データを保存する辞書。指定時刻に近い時刻のデータをO(log(n))で探す。"""
