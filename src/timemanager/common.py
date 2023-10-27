@@ -336,7 +336,7 @@ class TimeRange:
     
     def __eq__(self, other):
         if isinstance(other, TimeRange):
-            return (self.start == other.start) and (self.end == other.start)
+            return (self.start == other.start) and (self.end == other.end)
         return NotImplemented
     
 class DisjointTimeRanges:
