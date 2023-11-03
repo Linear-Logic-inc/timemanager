@@ -541,6 +541,12 @@ class DisjointTimeRanges:
         else:
             return NotImplemented
         
+    def __add__(self, other):
+        return self | other
+    
+    def __radd__(self, other):
+        return self | other
+        
     def __or__(self, other):
         if isinstance(other, (TimeRange, DisjointTimeRanges)):
             return self.union(other)
