@@ -93,9 +93,9 @@ while True:
 このコードは、[example.com](http://example.com)からコンテンツをスクレイピングし、その内容を出力します。`timemanager.wait_if_pace_too_fast(1)`は、スクレイピング関数が1秒に1回以上実行されないように制御します。
 </details>
 <details>
- <summary><b>`TradeTime` Class</b></summary>
+ <summary><b>`trade_time` object</b></summary>
 
- TradeTimeクラスは、特定の日の取引時間を管理します。インスタンスを初期化する際に、日付を指定することができます。日付を指定しない場合、デフォルトでは現在の日付が使用されます。指定した日付（または現在の日付）に基づいて、取引時間に関する各種の判定が行われます。
+ trade_time オブジェクトは、日本株の取引時間を管理します。インスタンスを初期化する際に、日付を指定することができます。日付を指定しない場合、デフォルトでは現在の日付が使用されます。指定した日付（または現在の日付）に基づいて、取引時間に関する各種の判定が行われます。
  
  <details><summary>現在の日の取引時間に関する情報を取得するコード</summary>
   
@@ -109,14 +109,11 @@ while True:
      print("The market is closed now.")
  ```
  </details>
- <details><summary>指定された日付と時刻について、取引時間内かどうかを確認するコード</summary>
+ <details><summary>指定された時刻について、取引時間内かどうかを確認するコード</summary>
   
  ```python
- from timemanager import TradeTime, from_timezone
- 
- # 特定の日付を指定してTradeTimeのインスタンスを作成
- trade_time_specific = TradeTime(date="2023-10-20")
- 
+ from timemanager import trade_time
+
  # 特定の日付と時刻が取引時間内であるかどうかを判定
  check_time = from_timezone('2023-10-20T10:00')  # timezone-awareなdatetimeを取得
  
@@ -135,11 +132,11 @@ while True:
   <summary>Next Business Day</summary>
   
  ```python
- from timemanager import TradeTime
+ from timemanager import trade_time
  
  # 指定された日付の翌営業日を取得
  specified_date = '2023-12-29'
- next_day = TradeTime.next_business_day(specified_date)
+ next_day = trade_time.next_business_day(specified_date)
  
  print(f"The next business day after {specified_date} is {next_day}.")
  ```
