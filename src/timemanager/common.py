@@ -691,10 +691,12 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 self.goba_first = pd.Timestamp(**date_args, hour=12, minute=30)
                 self.goba_last = pd.Timestamp(**date_args, hour=15, minute=0)
                 self.five_minutes_before_goba_last = pd.Timestamp(**date_args, hour=14, minute=55)
-
+                self.is_business_day = TradeTime.is_business_day(date)
+                
                 self.date = date
 
         def is_lunch_break(self, time=None, inclusive=False):
+            if not self.is_business_day: return False
             time = time or now()
             if inclusive:
                 return (self.zenba_last <= time <= self.goba_first)
@@ -702,6 +704,7 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 return (self.zenba_last < time < self.goba_first)
 
         def is_before_start(self, time=None, inclusive=False):
+            if not self.is_business_day: return False
             time = time or now()
             if inclusive:
                 return (time <= self.zenba_first)
@@ -709,6 +712,7 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 return (time < self.zenba_first)
 
         def is_after_end(self, time=None, inclusive=False):
+            if not self.is_business_day: return False
             time = time or now()
             if inclusive:
                 return (self.goba_last <= time)
@@ -716,6 +720,7 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 return (self.goba_last < time)
 
         def is_trading_hours(self, time=None, inclusive=True):
+            if not self.is_business_day: return False
             time = time or now()
             if inclusive:
                 return (self.zenba_first <= time <= self.zenba_last) or (self.goba_first <= time <= self.goba_last)
@@ -723,6 +728,7 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 return (self.zenba_first < time < self.zenba_last) or (self.goba_first < time < self.goba_last)
 
         def is_last_five_minutes(self, time=None, inclusive=True):
+            if not self.is_business_day: return False
             time = time or now()
             if inclusive:
                 return (self.five_minutes_before_goba_last <= time <= self.goba_last)
