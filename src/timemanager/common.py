@@ -758,6 +758,18 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 
             # 指定日の_TradeTimeオブジェクトを返す
             return self._date2trade_time_obj[date]
+        
+        def zenba_first(self, date=None):
+            return self[date].zenba_first
+        
+        def zenba_last(self, date=None):
+            return self[date].zenba_last
+        
+        def goba_first(self, date=None):
+            return self[date].goba_first
+        
+        def goba_last(self, date=None):
+            return self[date].goba_last
             
         def is_lunch_break(self, time=None, inclusive=False):
             return self[time].is_lunch_break(time, inclusive)
