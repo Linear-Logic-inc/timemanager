@@ -40,6 +40,10 @@ def from_utc(time):
     """UTC時刻をpandas.Timestamp型に変換する"""
     return pd.Timestamp(time) + TIMEZONE
 
+def from_timezone(time):
+    """Timezoneに応じた時刻をpandas.Timestamp型に変換する"""
+    return pd.Timestamp(time).tz_localize(None)
+
 def to_datetime(time_obj):  
     if isinstance(time_obj, datetime.datetime):
         return time_obj
