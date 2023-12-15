@@ -1,5 +1,4 @@
 import time as time_module
-from ctypes import windll
 import datetime
 
 import numpy as np
@@ -13,7 +12,15 @@ TIMEZONE = pd.Timedelta(9, 'h')
 # windowsのクロック解像度はデフォルトでは1/64秒=15.625ミリ秒
 # これをより短く設定する
 DTIME = 1
-windll.winmm.timeBeginPeriod(DTIME)
+
+try:
+    from ctypes import windll
+except ImportError as e:
+    # LINUX等のとき
+    WINDOWS=False
+else:
+    WINDOWS=True
+    windll.winmm.timeBeginPeriod(DTIME)
 
 # wait_if_pace_too_fast 関数が最後に呼ばれた時刻
 _time_last_wait_if_func_called = None
@@ -27,8 +34,9 @@ class _HiddenDestructor:
         pass
     
     def __del__(self):
-        # クロック解像度の変更をもとに戻す
-        windll.winmm.timeEndPeriod(DTIME)
+        if WINDOWS:
+            # クロック解像度の変更をもとに戻す
+            windll.winmm.timeEndPeriod(DTIME)
 
 _DO_NOT_REFER_THIS = _HiddenDestructor()
 
