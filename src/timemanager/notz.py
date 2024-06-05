@@ -100,7 +100,7 @@ def wait_if_pace_too_fast(dtime_second = 1):
     global _time_last_wait_if_func_called
     
     if not _time_last_wait_if_func_called is None:
-        end_time = _time_last_wait_if_func_called + pd.to_timedelta(dtime_second, unit='S')
+        end_time = _time_last_wait_if_func_called + pd.to_timedelta(dtime_second, unit='s')
         wait_until(end_time)
     _time_last_wait_if_func_called = now()
 
