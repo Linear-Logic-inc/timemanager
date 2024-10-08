@@ -695,7 +695,7 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 self.zenba_first = pd.Timestamp(**date_args, hour=9, minute=0)
                 self.zenba_last = pd.Timestamp(**date_args, hour=11, minute=30)
                 self.goba_first = pd.Timestamp(**date_args, hour=12, minute=30)
-                if date >= pd.Timestamp(year=2024, month=11, day=5):
+                if date >= datetime.date(year=2024, month=11, day=5):
                     # 取引時間延長後のとき
                     self.is_after_arrowhead4 = True
                     self.goba_last = pd.Timestamp(**date_args, hour=15, minute=30)
