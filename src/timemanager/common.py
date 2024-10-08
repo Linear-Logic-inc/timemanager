@@ -750,7 +750,7 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 return (self.five_minutes_before_goba_last < time < self.goba_last)
 
         def is_closing_auction(self, time=None, inclusive=True):
-            if self.is_business_day and is_after_arrowhead4:
+            if self.is_business_day and self.is_after_arrowhead4:
                 return self.is_last_five_minutes(time=time, inclusive=inclusive)
             else:
                 return False
