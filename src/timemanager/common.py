@@ -695,8 +695,16 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 self.zenba_first = pd.Timestamp(**date_args, hour=9, minute=0)
                 self.zenba_last = pd.Timestamp(**date_args, hour=11, minute=30)
                 self.goba_first = pd.Timestamp(**date_args, hour=12, minute=30)
-                self.goba_last = pd.Timestamp(**date_args, hour=15, minute=0)
-                self.five_minutes_before_goba_last = pd.Timestamp(**date_args, hour=14, minute=55)
+                if date >= pd.Timestamp(year=2024, month=11, day=5):
+                    # 取引時間延長後のとき
+                    self.is_after_arrowhead4 = True
+                    self.goba_last = pd.Timestamp(**date_args, hour=15, minute=30)
+                    self.five_minutes_before_goba_last = pd.Timestamp(**date_args, hour=15, minute=25) # クロージング・オークション開始
+                else:
+                    # 取引時間延長前のとき
+                    self.is_after_arrowhead4 = False
+                    self.goba_last = pd.Timestamp(**date_args, hour=15, minute=00)
+                    self.five_minutes_before_goba_last = pd.Timestamp(**date_args, hour=14, minute=55) # 引け5分前(※ザラ場)
                 self.is_business_day = TradeTime.is_business_day(date)
                 
                 self.date = date
@@ -740,6 +748,12 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
                 return (self.five_minutes_before_goba_last <= time <= self.goba_last)
             else:
                 return (self.five_minutes_before_goba_last < time < self.goba_last)
+
+        def is_closing_auction(self, time=None, inclusive=True):
+            if self.is_business_day and is_after_arrowhead4:
+                return self.is_last_five_minutes(time=time, inclusive=inclusive)
+            else:
+                return False
 
 
     class TradeTime:
@@ -786,6 +800,9 @@ def create_trade_time_obj(to_date, TIMEZONE, now):
         def is_last_five_minutes(self, time=None, inclusive=True):
             return self[time].is_last_five_minutes(time, inclusive)
         
+        def is_closing_auction(self, time=None, inclusive=True):
+            return self[time].is_closing_auction(time, inclusive)
+            
         @staticmethod
         def settlement_date(trade_date):
             """約定日から受渡日を計算する"""
