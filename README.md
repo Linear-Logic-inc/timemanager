@@ -21,7 +21,7 @@ TimeManagerは、時刻を扱うPythonモジュールです。このモジュー
 以下のコマンドを使用して、TimeManagerをインストールしてください。
 
 ```
-pip install git+https://github.com/FumiYoshida/timemanager
+pip install git+https://github.com/Linear-Logic-inc/timemanager
 ```
 
 ## Usage
@@ -317,4 +317,4 @@ Note that in the querying methods, the result is a tuple with the time and value
 
 ## License
 
-このプロジェクトはMITライセンスのもとで公開されています。詳細は[LICENSE](https://github.com/FumiYoshida/timemanager/blob/main/LICENSE)をご覧ください。
+このプロジェクトはMITライセンスのもとで公開されています。詳細は[LICENSE](https://github.com/Linear-Logic-inc/timemanager/blob/main/LICENSE)をご覧ください。
