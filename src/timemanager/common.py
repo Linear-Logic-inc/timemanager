@@ -327,6 +327,11 @@ class TimeRange:
         if isinstance(other, TimeRange):
             return self.union(other)
         return NotImplemented
+
+    def __add__(self, other):
+        if isinstance(other, TimeRange):
+            return self.union(other)
+        return NotImplemented
     
     def __and__(self, other):
         if isinstance(other, TimeRange):
